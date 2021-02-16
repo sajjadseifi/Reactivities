@@ -1,0 +1,5 @@
+bin
+obj
+*.db
+appsettings.json
+.DS_Store
