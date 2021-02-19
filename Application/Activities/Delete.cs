@@ -1,6 +1,8 @@
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Errors;
 using MediatR;
 using Persistence;
 
@@ -24,7 +26,7 @@ namespace Application.Activities
                         var activitie = await _context.Activities.FindAsync(request.Id);
 
                         if(activitie == null)
-                            throw new Exception("Coud Not Found Activity");
+                            throw new RestExeption(HttpStatusCode.NotFound,new {activitiy="Not Found"});
 
                         _context.Remove(activitie);
 

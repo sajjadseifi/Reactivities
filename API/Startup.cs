@@ -1,4 +1,6 @@
+using API.Middleware;
 using Application.Activities;
+using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -28,41 +30,49 @@ namespace API
             {
                 opt.UseSqlite(Configuration.GetConnectionString("DefaultConnextion"));
             });
+
+
+            services.AddControllers()
+            .AddFluentValidation(cfe=>{
+                cfe.RegisterValidatorsFromAssemblyContaining<Create>();
+                cfe.RegisterValidatorsFromAssemblyContaining<Edit>();
+            });
+
+            services.AddMediatR(typeof(List.Handler).Assembly);
+
+            // services.AddSwaggerGen(c =>
+            // {
+            //     c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
+            // });
+
             services.AddCors(opt =>
             {
                 opt.AddPolicy("CorsPolicy", policy =>
                 {
-                    policy
+                    policy.WithOrigins("http://localhost:3000")
                     .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .WithOrigins("http://localhost:3000/");
+                    .AllowAnyMethod();
                 });
-            });
-            services.AddControllers();
-
-            services.AddMediatR(typeof(List.Handler).Assembly);
-            // services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });
             });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseMiddleware<ErrorHandlerMiddleWare>();
             if (env.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"));
+                // app.UseDeveloperExceptionPage();
+                // app.UseSwagger();
+                // app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1"));
             }
 
             // app.UseHttpsRedirection();
-            app.UseCors("CorsPolicy");
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseCors("CorsPolicy");
 
             app.UseEndpoints(endpoints =>
             {
