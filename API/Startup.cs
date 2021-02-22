@@ -18,6 +18,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Infrastructure.Security;
 using Persistence;
+using AutoMapper;
 
 namespace API
 {
@@ -36,40 +37,63 @@ namespace API
 
             services.AddDbContext<DataContext>(opt =>
             {
+                opt.UseLazyLoadingProxies();
                 opt.UseSqlite(Configuration.GetConnectionString("DefaultConnextion"));
             });
 
 
             services.AddControllers()
-            .AddFluentValidation(cfe=>{
+            .AddFluentValidation(cfe =>
+            {
                 cfe.RegisterValidatorsFromAssemblyContaining<Create>();
                 cfe.RegisterValidatorsFromAssemblyContaining<Edit>();
             });
 
             var builder = services.AddIdentityCore<AppUser>();
-            var identityBuilder = new IdentityBuilder(builder.UserType,builder.Services);
+            var identityBuilder = new IdentityBuilder(builder.UserType, builder.Services);
             identityBuilder.AddEntityFrameworkStores<DataContext>();
             identityBuilder.AddSignInManager<SignInManager<AppUser>>();
 
+            services.AddAuthorization(opt =>
+            {
+                opt.AddPolicy("IsActivityHost", policy =>
+                {
+                    policy.Requirements.Add(new IsHostReqirement());
+                });
+            });
+
+            services.AddTransient<IAuthorizationHandler,IsHostReqirementHandler>();
+
             services.AddMediatR(typeof(List.Handler).Assembly);
-            services.AddMvc(opt=>{
+            services.AddMvc(opt =>
+            {
                 var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
                 opt.Filters.Add(new AuthorizeFilter(policy));
             });
             // services.AddSwaggerGen(c =>{c.SwaggerDoc("v1", new OpenApiInfo { Title = "API", Version = "v1" });});
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["TokenKey"]));
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(opt=>{
-                opt.TokenValidationParameters = new  TokenValidationParameters{
-                    ValidateIssuerSigningKey=true,
-                    IssuerSigningKey=key,
-                    ValidateAudience=false,
-                    ValidateIssuer=false,
+            .AddJwtBearer(opt =>
+            {
+                opt.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = key,
+                    ValidateAudience = false,
+                    ValidateIssuer = false,
                 };
             });
-            services.AddScoped<IJwtGenerator,JwtGenerator>();
+            services.AddScoped<IJwtGenerator, JwtGenerator>();
+            services.AddScoped<IUserAccessor, UserAccessor>();
 
-            services.AddScoped<IUserAccessor,UserAccessor>();
+            services.AddAutoMapper(typeof(List.Handler));
+            // var configuration = new MapperConfiguration(cfg => 
+            // {
+            //     cfg.CreateMap<Activity, FooDto>();
+            //     cfg.CreateMap<Bar, BarDto>();
+            // });
+            // configuration.AssertConfigurationIsValid();
+            // var mapper = configuration.CreateMapper();
 
             services.AddCors(opt =>
             {
