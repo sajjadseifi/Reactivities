@@ -339,5 +339,19 @@
 		  "}"
 		],
 		"description": "S_14.10.1"
+	  },
+	  "props": {
+		"prefix": "props",
+		"body": [
+		  "public string MyStringProp{get;set;}"
+		],
+		"description": "props"
+	  },
+	  "propb": {
+		"prefix": "propb",
+		"body": [
+		  "public bool MyStringProp{get;set;}"
+		],
+		"description": "propb"
 	  }
 }

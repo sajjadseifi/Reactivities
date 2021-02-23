@@ -19,6 +19,8 @@ using Microsoft.IdentityModel.Tokens;
 using Infrastructure.Security;
 using Persistence;
 using AutoMapper;
+using Infrastructure.Photos;
+using Application.Photos;
 
 namespace API
 {
@@ -65,6 +67,10 @@ namespace API
             services.AddTransient<IAuthorizationHandler,IsHostReqirementHandler>();
 
             services.AddMediatR(typeof(List.Handler).Assembly);
+            services.AddMediatR(typeof(Add.Handler).Assembly);
+            services.AddMediatR(typeof(Add).Assembly);
+
+
             services.AddMvc(opt =>
             {
                 var policy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
@@ -85,8 +91,12 @@ namespace API
             });
             services.AddScoped<IJwtGenerator, JwtGenerator>();
             services.AddScoped<IUserAccessor, UserAccessor>();
+            services.AddScoped<IPhotoAccessor,PhotoAccessor>();
+
+            services.Configure<CloudinarySettings>(Configuration.GetSection("Coudinary"));
 
             services.AddAutoMapper(typeof(List.Handler));
+
             // var configuration = new MapperConfiguration(cfg => 
             // {
             //     cfg.CreateMap<Activity, FooDto>();
