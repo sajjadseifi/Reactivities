@@ -353,5 +353,13 @@
 		  "public bool MyStringProp{get;set;}"
 		],
 		"description": "propb"
-	  }
+	  },
+	  "propv": {
+		"prefix": "propv",
+		"body": [
+		  "public virtual Class ojbect{get;set;}"
+		],
+		"description": "propb"
+	  },
+	  
 }

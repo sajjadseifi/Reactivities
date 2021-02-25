@@ -11,28 +11,20 @@ namespace Application.Profiles
     {
         public class Query : IRequest<Profile>
         {
-            public string Username{get;set;}
+            public string Username { get; set; }
         }
 
         public class Handler : IRequestHandler<Query, Profile>
         {
-            private readonly DataContext _context;
+            private readonly IProfileReader _profileReader;
 
-            public Handler(DataContext context)
+            public Handler(IProfileReader profileReader)
             {
-                _context = context;
+                _profileReader = profileReader;
             }
             public async Task<Profile> Handle(Query request, CancellationToken cancellationToken)
             {
-                var user = await _context.Users.SingleOrDefaultAsync(u=> u.UserName == request.Username);   
-
-                return new Profile{
-                    DisplayName=user.DisplayName,
-                    UserName= user.UserName,    
-                    Bio= user.Bio,
-                    Image=user.Photos.FirstOrDefault(p => p.IsMain)?.Url,
-                    Photos = user.Photos
-                };  
+                return await _profileReader.ReadProfile(request.Username);
             }
         }
 
